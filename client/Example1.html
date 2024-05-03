@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket example 1</title>
+    <style>
+        input {
+            width: 500px;
+            padding: 4px;
+            margin: 8px;
+        }
+        
+        button {
+            padding: 4px;
+        }
+        
+        #messages {
+            background-color: #eee;
+            font-style: 'Courier New', monospace;
+            width: 600px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>WebSocket example 1</h1>
+
+    <input type="text" id="addressInput" value="ws://localhost:8090/WebSocketJakartaEEDemo/example1" placeholder="ws://..." autocomplete="off" />
+    <button type="button" id="connectButton">Connect</button>
+    <button type="button" id="disconnectButton" disabled>Disconnect</button>
+
+<div id="messageInputDiv" style="display: none;">
+    <input type="text" id="messageInput" placeholder="Message" autocomplete="off" />
+    <button id="sendButton">Send</button>
+</div>
+<div id="messages"></div>
+
+<script>
+    let socket;
+    const addressInput = document.getElementById('addressInput');
+    const connectButton = document.getElementById('connectButton');
+    const disconnectButton = document.getElementById('disconnectButton');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const messages = document.getElementById('messages');
+    const messageInputDiv = document.getElementById('messageInputDiv');
+
+    connectButton.addEventListener('click', event => {
+        socket = new WebSocket(addressInput.value);
+
+        socket.addEventListener('open', () => {
+            messages.innerHTML = '';
+            messages.style.display = 'block';
+            messageInputDiv.style.display = 'block';
+            enableUI(true)
+        });
+
+        socket.addEventListener('message', event => {
+            const message = document.createElement('div');
+            message.innerText = event.data;
+            messages.appendChild(message);
+        });
+
+        socket.addEventListener('close', () => {
+            enableUI(false);
+        });
+
+        socket.addEventListener('error', event => {
+            console.error('Error occurred: ' + event);
+        });
+    });
+
+    sendButton.addEventListener('click', event => {
+        socket.send(messageInput.value);
+        messageInput.value = '';
+    });
+
+    disconnectButton.addEventListener('click', event => {
+        socket.close();
+        enableUI(false);
+    });
+    
+    function enableUI(flag) {
+        connectButton.disabled = flag;
+        addressInput.disabled = flag;
+        disconnectButton.disabled = !flag;
+    }
+</script>
+</body>
+</html>

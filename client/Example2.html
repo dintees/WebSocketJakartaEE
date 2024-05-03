@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket example 2</title>
+    <style>
+        input {
+            width: 500px;
+            padding: 4px;
+            margin: 8px;
+        }
+        
+        button {
+            padding: 4px;
+        }
+        
+        #messages {
+            background-color: #eee;
+            font-style: 'Courier New', monospace;
+            width: 600px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>WebSocket example 2</h1>
+
+<label for="addressInput">Address:</label>
+<input type="text" id="addressInput" value="ws://localhost:8090/WebSocketJakartaEEDemo/example2" placeholder="ws://..." autocomplete="off" />
+<label for="usernameInput">Username:</label>
+<input type="text" id="usernameInput" style="width: 200px;">
+<button type="button" id="connectButton">Connect</button>
+<button type="button" id="disconnectButton" disabled>Disconnect</button>
+
+<div id="messageInputDiv" style="display: none;">
+    <label for="messageInput">Send a message:</label>
+    <input type="text" id="messageInput" placeholder="Type your message here" style="width: 400px;">
+    <button type="submit" id="sendButton">Send</button>
+</div>
+<div id="messages"></div>
+
+<script>
+    let socket;
+    const addressInput = document.getElementById('addressInput');
+    const usernameInput = document.getElementById('usernameInput');
+    const connectButton = document.getElementById('connectButton');
+    const disconnectButton = document.getElementById('disconnectButton');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const messages = document.getElementById('messages');
+    const messageInputDiv = document.getElementById('messageInputDiv');
+
+    connectButton.addEventListener('click', event => {
+        socket = new WebSocket(`${addressInput.value}/${usernameInput.value}`);
+
+        socket.addEventListener('open', () => {
+            messages.innerHTML = '';
+            messages.style.display = 'block';
+            messageInputDiv.style.display = 'block';
+            enableUI(true)
+        });
+
+        socket.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            console.log(data);
+            const message = document.createElement('div');
+            message.innerText = `[${data.author}] ${data.message}`;
+            message.style.color = data.color;
+            messages.appendChild(message);
+        });
+
+        socket.addEventListener('close', () => {
+            enableUI(false)
+        });
+
+        socket.addEventListener('error', event => {
+            console.error('WebSocket error: ' + event);
+        });
+    });
+
+    sendButton.addEventListener('click', event => {
+        event.preventDefault();
+        const data = JSON.stringify({ message: messageInput.value, author: usernameInput.value, color: "" });
+        socket.send(data);
+        messageInput.value = '';
+    });
+
+    disconnectButton.addEventListener('click', event => {
+        event.preventDefault();
+        socket.close();
+        enableUI(false);
+    });
+    
+    function enableUI(flag) {
+        connectButton.disabled = flag;
+        addressInput.disabled = flag;
+        usernameInput.disabled = flag;
+        disconnectButton.disabled = !flag;
+    }
+</script>
+</body>
+</html>
